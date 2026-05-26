@@ -6,7 +6,7 @@
 // Definindo o tipo de dados Hash
 struct hash {
     int qtd, TABLE_SIZE;
-    struct Dado **itens, **overflow;// inicializamos como ponteiro para ponteiro, pois como o tipoDado é um struct e pode ter vários campos, o tamanho do vetor pode acabar ficando muito grande, ao inicializar como ponteiro para ponteiro, poderemos alocar um vetor de ponteiros e apenas o endereço de memória dos elementos ficará armazenado, economizando espaço.
+    struct Dado **itens, **overflow;// inicializamos como ponteiro para ponteiro, pois como o tipoDado é um struct e pode ter vários campos, o tamanho do vetor pode acabar ficando muito grande, ao inicializar como ponteiro para ponteiro, poderemos alocar um vetor de ponteiros e apenas o endereço de memória dos elementos ficará armazenado, economizando espaço.z
 };
 
 // Criando uma Tabela Hash
@@ -15,7 +15,7 @@ Hash* criaHash (int TABLE_SIZE){
     if(ha){ // se a alocação foi bem sucedida, prosseguimos para as operações
         ha->TABLE_SIZE = TABLE_SIZE; // o atributo TABLE_SIZE da Hash, recebe o parâmetro passado pela função
         ha->itens = (struct Dado**) malloc(TABLE_SIZE * sizeof(struct Dado*)); // alocamos o vetor de ponteiros, o tamanho do vetor de ponteiros em bytes deve ser a quantidade de elementos da tabela vezes o tamanho de cada ponteiro; 
-        ha->overflow = (struct Dado**) malloc((TABLE_SIZE/3) * sizeof(struct Dado*))
+        ha->overflow = (struct Dado**) malloc((TABLE_SIZE/3) * sizeof(struct Dado*));
         if(!ha->itens){ 
             free(ha); // se a alocação do vetor de ponteiros falhou, liberamos a estrutura e retornamos NULL denotando erro
             return NULL;
@@ -40,12 +40,17 @@ Hash* criaHash (int TABLE_SIZE){
     // percorremos a Tabela Hash, sempre que encontramos algum elemento que tenha memória alocada, liberamos esse elemento, ao final, liberamos o vetor e a estrutura hash
 void liberaHash(Hash* ha){
     if(ha){
-        for(int i=0; i<(ha->TABLE_SIZE - 1); i++){
+        for(int i=0; i<(ha->TABLE_SIZE); i++){
             if(ha->itens[i]){
                 free(ha->itens[i]);
+                
             }
         }
+        for (int j =0; j<(ha->TABLE_SIZE/3); j++){
+            free(ha->overflow[j]);
+        }
         free(ha->itens);
+        free(ha->overflow);
         free(ha);
     }
 }
@@ -60,13 +65,13 @@ int chaveDivisao(int chave, int TABLE_SIZE){
 // Inserção em Tabela Hash
 
 // Sem tratar colisões 
-int insereHash_SemColisao(Hash* ha, struct Dado dado){
+int insereHash_SemColisao(Hash* ha, struct Dado *dado){
     if(!ha || ha->qtd == ha->TABLE_SIZE) return 0; // não podemos inserir em uma tabela que já está com todas as posições preenchidas ou cuja alocação falhou
     int chave = dado->chave;
     int pos = chaveDivisao(chave, ha->TABLE_SIZE);
     struct Dado* novo = (struct Dado*) malloc(sizeof(struct Dado));
     if(!novo) return 0;
-    *novo = dado;
+    *novo = *dado;
     ha->itens[pos] = novo;
     ha->qtd++;
     return 1;
@@ -76,20 +81,20 @@ int insereHash_SemColisao(Hash* ha, struct Dado dado){
     // Uma colisão é a ocorrência de duas ou mais chaves na tabela Hash com o mesmo valor de posição
     // Área de overflow: a tabela hash é divida em área normal e área de overflow, a ultima será usada para armazenar as colisões
 
-int insereHash_AreaOverflow(Hash* ha, struct Dado dado){
+int insereHash_AreaOverflow(Hash* ha, struct Dado* dado){
     if(!ha || ha->qtd == ha->TABLE_SIZE) return 0; // não podemos inserir em uma tabela que já está com todas as posições preenchidas ou cuja alocação falhou
     int chave = dado->chave;
     int pos = chaveDivisao(chave, ha->TABLE_SIZE);
     struct Dado* novo = (struct Dado*) malloc(sizeof(struct Dado));
     if(!novo) return 0;
-    *novo = dado;
+    *novo = *dado;
     if(!ha->itens[pos]){ 
     ha->itens[pos] = novo;
     ha->qtd++;
     return 1;
     }else{
     // inserir na área de overflow
-    for(int i=0; i<(ha->TABLE_SIZE/3)-1; i++){
+    for(int i=0; i<(ha->TABLE_SIZE/3); i++){
         if(!ha->overflow[i]){
             ha->overflow[i] = novo;
             ha->qtd++;
@@ -104,18 +109,18 @@ int insereHash_AreaOverflow(Hash* ha, struct Dado dado){
     // Sem tratar colisões
 int buscaHash_SemColisao(Hash* ha, int chave){
     if(!ha) return 0;
-    int pos = chaveDivisao(mat, ha->TABLE_SIZE);
+    int pos = chaveDivisao(chave, ha->TABLE_SIZE);
     if(!ha->itens[pos]) return 0;
     return 1;
 }
 
 int buscaHash_AreaOverflow(Hash* ha, int chave){
     if(!ha) return 0;
-    int pos = chaveDivisao(mat, ha->TABLE_SIZE);
+    int pos = chaveDivisao(chave, ha->TABLE_SIZE);
     if(ha->itens[pos]) return 1;
     else{ // (!ha->itens[pos])
         for(int i=0; i<(ha->TABLE_SIZE/3); i++){
-            if(ha->overflow[i]->chave == chave){
+            if(ha->overflow[i] && ha->overflow[i]->chave == chave){
                 return 1;
             }
         }
