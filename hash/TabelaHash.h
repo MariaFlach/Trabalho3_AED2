@@ -1,11 +1,4 @@
-typedef struct Aluno {
-    char nome[50];
-    int CR;
-    int matricula;
-    char curso[30];
-    char pibic;
-    char orientador[30];
-}Aluno;
+#include "../dados/dados.h"
 
 typedef struct hash Hash; // o struct hash não deve estar visível para o usuário, apenas o nome do tipo de dados, que é definido no .h
 Hash* criaHash(int tamanho);
