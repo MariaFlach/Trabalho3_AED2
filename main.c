@@ -5,34 +5,24 @@
 #define TAM 10000
 #define INICIALIZAR 100003
 int main(){
-
-// Dá pra transformar isso aqui na função "CriarArquivoDeVetor"
-// Criação do vetor e do ponteiro para o arquivo
+    
+    // 
     Aluno** alunos = gerarVetorAlunosAleatorios(TAM);
-    FILE *arquivo;
- // Criação do vetor de indices   
+    FILE *arquivo; 
     Indice** indices = gerarEsquemaIndice(alunos, TAM);
-// Criação do arquivo binário com 10000 alunos aleatórios
-  // só criar um novo arquivo se n houver nenhum outro criado?
-     arquivo = fopen("arquivoAlunos.bin", "w+b");
+    arquivo = fopen("arquivoAlunos.bin", "w+b");
     for (int i=0; i<TAM; i++){
         fwrite(alunos[i], sizeof(Aluno), 1, arquivo);
-    }
+    } // pensar se não seria melhor escrever o vetor inteiro logo, mas teria que ver como ficaria a questão do preenchimento dos endereços de memória, como o processo de escrever no arquivo só ocorre uma vez, creio que essa iteração não seja um grande problema
 
     // Inserindo os elementos no hash
     Hash* indexador= criaHash(INICIALIZAR);
-    for(int i=0; i<TAM; i++){
-        insereHash_AreaOverflow(indexador, indices[i]);
-    }
-    printf("Colisoes: %d \n", mostrarColisoes(indexador));
+    // inserindo os indices na tabela Hash
+    inserirIndicesNoHash(indexador, TAM, indices);
+    // Fazer busca por matricula (já mostra o retorno)
+    Aluno retornado = buscaPorMatricula(indexador, alunos[10]->matricula, arquivo);
 
-    // Fazer busca por matricula
-    int buscado = alunos[10]->matricula;
-    int endereco = buscaHash_AreaOverflow(indexador, buscado);
-    printf("Matricula buscada: %d, endereco: %d \n", buscado, endereco);
-    Aluno retornado = retornarRegistroEmArquivo(endereco, arquivo);
 
-    printf("Nome: %s, curso: %s", retornado.nome, retornado.curso);
 
 
 

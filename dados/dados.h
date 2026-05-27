@@ -6,7 +6,7 @@ typedef struct Aluno {
     float CR;
     int matricula;
     char curso[30];
-    char pibic;
+    int pibic;
     char orientador[30];
 } Aluno;
 
@@ -20,5 +20,4 @@ void geraNome(char* dest);
 Aluno geraAlunoAleatorio();
 Aluno** gerarVetorAlunosAleatorios(int tam);
 Indice** gerarEsquemaIndice(Aluno** alunos, int tam);
-Aluno retornarRegistroEmArquivo(int endereco, FILE *arquivo);
 #endif

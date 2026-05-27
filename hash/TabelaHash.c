@@ -98,3 +98,29 @@ int buscaHash_AreaOverflow(Hash* ha, int matricula){
     }
     return -1;
 }
+
+Aluno retornarRegistroEmArquivo(int endereco, FILE *arquivo){
+    Aluno aluno;
+    // preciso posicionar o cursor no primeiro byte do arquivo
+    // estamos começando do começo do arquivo e indo até o endereço de onde começa o elemento que estamos buscando
+    fseek(arquivo, endereco, SEEK_SET);
+    fread(&aluno, sizeof(Aluno), 1, arquivo);
+    return aluno;
+}
+
+Aluno buscaPorMatricula (Hash* ha,int matricula, FILE* arquivo){
+    Aluno retornado;
+    int endereco = buscaHash_AreaOverflow(ha, matricula);
+    fseek(arquivo, endereco, SEEK_SET);
+    fread(&retornado, sizeof(Aluno), 1, arquivo);
+    printf("Nome: %s \n CR: %f \n Matricula: %d \n Curso: %s \n PIBIC: %d \n Orientador: %s \n\n ", retornado.nome, retornado.CR, retornado.matricula, retornado.curso, retornado.pibic, retornado.orientador);
+    return retornado;
+}
+
+int inserirIndicesNoHash(Hash* ha, int qt_indices,      Indice** indices){
+    for(int i=0; i<qt_indices; i++){
+        insereHash_AreaOverflow(ha, indices[i]);
+    }
+    printf("Quantidade de colisoes: %d \n", mostrarColisoes(ha));
+    return mostrarColisoes(ha);
+}
