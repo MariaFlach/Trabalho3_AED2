@@ -24,8 +24,15 @@ int main(){
     for(int i=0; i<TAM; i++){
         insereHash_AreaOverflow(indexador, indices[i]);
     }
-    printf("%d \n", mostrarColisoes(indexador));
+    printf("Colisoes: %d \n", mostrarColisoes(indexador));
 
+    // Fazer busca por matricula
+    int buscado = alunos[10]->matricula;
+    int endereco = buscaHash_AreaOverflow(indexador, buscado);
+    printf("Matricula buscada: %d, endereco: %d \n", buscado, endereco);
+    Aluno retornado = retornarRegistroEmArquivo(endereco, arquivo);
+
+    printf("Nome: %s, curso: %s", retornado.nome, retornado.curso);
 
 
 

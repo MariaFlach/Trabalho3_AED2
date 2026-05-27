@@ -20,5 +20,5 @@ void geraNome(char* dest);
 Aluno geraAlunoAleatorio();
 Aluno** gerarVetorAlunosAleatorios(int tam);
 Indice** gerarEsquemaIndice(Aluno** alunos, int tam);
-Aluno retornarRegistroEmArquivo(Indice indice, FILE *arquivo);
+Aluno retornarRegistroEmArquivo(int endereco, FILE *arquivo);
 #endif

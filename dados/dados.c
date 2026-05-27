@@ -26,7 +26,7 @@ Aluno geraAlunoAleatorio() {
     Aluno aluno;
     geraNome(aluno.nome);
     aluno.CR = (float)(rand() % 101) / 10.0f;
-    aluno.matricula = 225500000 + (int)(((long long)rand() * (RAND_MAX + 1) + rand()) % 1000000);
+    aluno.matricula = 225500000 + (int)(((long long)rand() << 15 | rand()) % 1000000);
     geraString(aluno.curso, 5, 15);
     aluno.curso[0] -= 32;
     aluno.pibic = rand() % 2;
@@ -74,9 +74,8 @@ Indice** gerarEsquemaIndice(Aluno** alunos, int tam){
 }
 
 // deve receber o arquivo já aberto
-Aluno retornarRegistroEmArquivo(Indice indice, FILE *arquivo){
+Aluno retornarRegistroEmArquivo(int endereco, FILE *arquivo){
     Aluno aluno;
-    int endereco = indice.endereco_inicio;
     // preciso posicionar o cursor no primeiro byte do arquivo
     // estamos começando do começo do arquivo e indo até o endereço de onde começa o elemento que estamos buscando
     fseek(arquivo, endereco, SEEK_SET);
