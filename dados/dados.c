@@ -1,6 +1,7 @@
 #include "dados.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <time.h>
 
 void geraString(char* dest, int min, int max) {
@@ -25,7 +26,7 @@ Aluno geraAlunoAleatorio() {
     Aluno aluno;
     geraNome(aluno.nome);
     aluno.CR = (float)(rand() % 101) / 10.0f;
-    aluno.matricula = 22550000 + (rand() % 10000);
+    aluno.matricula = 225500000 + (int)(((long long)rand() * (RAND_MAX + 1) + rand()) % 1000000);
     geraString(aluno.curso, 5, 15);
     aluno.curso[0] -= 32;
     aluno.pibic = rand() % 2;
@@ -44,24 +45,41 @@ Aluno geraAlunoAleatorio() {
 
 // Durante a geração do vetor de alunos, é preciso verificar o endereço de inicio;
 // preciso revisar o conteúdo 
-Aluno* gerarVetorAlunosAleatorios(int tam){
+
+// SERIA IDEAL TRANSFORMAR EM VETOR DE PONTEIROS DO TIPO ALUNO? PORQUE HASH É PONTEIRO PARA PONTEIRO
+// TEM QUE ALOCAR CADA ELEMENTO DO VETOR DE PONTEIROS
+Aluno** gerarVetorAlunosAleatorios(int tam){
     srand(time(NULL));
-    Aluno* alunos = malloc(tam * sizeof(Aluno));
+    Aluno** alunos = malloc(tam * sizeof(Aluno*));
+    Aluno novo;
     if (!alunos) return NULL;
     for(int i=0; i<tam; i++){
-        alunos[i] = geraAlunoAleatorio();
+        novo = geraAlunoAleatorio();
+        alunos[i] = malloc(sizeof(Aluno));
+        *alunos[i] = novo;
     }
     return alunos;
 }
 
 // Para cada elemento do vetor dos alunos, o indice contém a matricula e o endereço de inicio, será possível acessar usando o endereço de inico + sizeof(aluno)
-Indice* gerarEsquemaIndice(Aluno* alunos, int tam){
-    Indice* indices = (Indice*) malloc(tam * sizeof(Indice));
+// SERIA IDEAL TRANSFORMAR EM VETOR DE PONTEIROS DO TIPO ALUNO? PORQUE HASH É PONTEIRO PARA PONTEIRO
+Indice** gerarEsquemaIndice(Aluno** alunos, int tam){
+    Indice** indices = (Indice**) malloc(tam * sizeof(Indice*));
     for (int i=0; i<tam; i++){
-        indices[i].matricula = alunos[i].matricula;
-        indices[i].endereco_inicio = i*sizeof(Aluno);
+        indices[i] = malloc(sizeof(Indice));
+        indices[i]->matricula = alunos[i]->matricula;
+        indices[i]->endereco_inicio = i*sizeof(Aluno);
     }
     return indices;
 }
 
-
+// deve receber o arquivo já aberto
+Aluno retornarRegistroEmArquivo(Indice indice, FILE *arquivo){
+    Aluno aluno;
+    int endereco = indice.endereco_inicio;
+    // preciso posicionar o cursor no primeiro byte do arquivo
+    // estamos começando do começo do arquivo e indo até o endereço de onde começa o elemento que estamos buscando
+    fseek(arquivo, endereco, SEEK_SET);
+    fread(&aluno, sizeof(Aluno), 1, arquivo);
+    return aluno;
+}

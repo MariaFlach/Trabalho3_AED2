@@ -14,7 +14,7 @@ Hash* criaHash (int TABLE_SIZE){
     if(ha){
         ha->TABLE_SIZE = TABLE_SIZE;
         ha->registros = (Indice**) malloc(TABLE_SIZE * sizeof(Indice*));
-        ha->registros= (Indice**) malloc((TABLE_SIZE/3) * sizeof(Indice*));
+        ha->overflow= (Indice**) malloc((TABLE_SIZE/3) * sizeof(Indice*));
         if(!ha->registros){
             free(ha);
             return NULL;
