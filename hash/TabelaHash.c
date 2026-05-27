@@ -6,7 +6,7 @@
 // Definindo o tipo de dados Hash
 struct hash {
     int qtd, TABLE_SIZE;
-    struct Dado **itens, **overflow;// inicializamos como ponteiro para ponteiro, pois como o tipoDado é um struct e pode ter vários campos, o tamanho do vetor pode acabar ficando muito grande, ao inicializar como ponteiro para ponteiro, poderemos alocar um vetor de ponteiros e apenas o endereço de memória dos elementos ficará armazenado, economizando espaço.z
+    Aluno **itens, **overflow;// inicializamos como ponteiro para ponteiro, pois como o tipoDado é um struct e pode ter vários campos, o tamanho do vetor pode acabar ficando muito grande, ao inicializar como ponteiro para ponteiro, poderemos alocar um vetor de ponteiros e apenas o endereço de memória dos elementos ficará armazenado, economizando espaço.z
 };
 
 // Criando uma Tabela Hash
@@ -14,8 +14,8 @@ Hash* criaHash (int TABLE_SIZE){
     Hash* ha = (Hash*) malloc(sizeof(Hash)); // alocar a estrutura hash;
     if(ha){ // se a alocação foi bem sucedida, prosseguimos para as operações
         ha->TABLE_SIZE = TABLE_SIZE; // o atributo TABLE_SIZE da Hash, recebe o parâmetro passado pela função
-        ha->itens = (struct Dado**) malloc(TABLE_SIZE * sizeof(struct Dado*)); // alocamos o vetor de ponteiros, o tamanho do vetor de ponteiros em bytes deve ser a quantidade de elementos da tabela vezes o tamanho de cada ponteiro; 
-        ha->overflow = (struct Dado**) malloc((TABLE_SIZE/3) * sizeof(struct Dado*));
+        ha->itens = (Aluno**) malloc(TABLE_SIZE * sizeof(Aluno*)); // alocamos o vetor de ponteiros, o tamanho do vetor de ponteiros em bytes deve ser a quantidade de elementos da tabela vezes o tamanho de cada ponteiro; 
+        ha->overflow = (Aluno**) malloc((TABLE_SIZE/3) * sizeof(Aluno*));
         if(!ha->itens){ 
             free(ha); // se a alocação do vetor de ponteiros falhou, liberamos a estrutura e retornamos NULL denotando erro
             return NULL;
@@ -56,20 +56,20 @@ void liberaHash(Hash* ha){
 }
 
 // função Hashing: método da divisão
-    // O método da divisão, para calcular a posição do espalhamento de um elemento dado sua chave, consiste em calcular o resto da divisão do valor inteiro que representa a chave pelo tamanho da tabela 
+    // O método da divisão, para calcular a posição do espalhamento de um elemento dado sua matricula, consiste em calcular o resto da divisão do valor inteiro que representa a matricula pelo tamanho da tabela 
     // Para evitar colisões, devemos procurar um número primo grande e nunca usar potências de 2 para ser o TABLE_SIZE
-int chaveDivisao(int chave, int TABLE_SIZE){
-    return chave % TABLE_SIZE;
+int matriculaDivisao(int matricula, int TABLE_SIZE){
+    return matricula % TABLE_SIZE;
 }
 
 // Inserção em Tabela Hash
 
 // Sem tratar colisões 
-int insereHash_SemColisao(Hash* ha, struct Dado *dado){
+int insereHash_SemColisao(Hash* ha, Aluno *dado){
     if(!ha || ha->qtd == ha->TABLE_SIZE) return 0; // não podemos inserir em uma tabela que já está com todas as posições preenchidas ou cuja alocação falhou
-    int chave = dado->chave;
-    int pos = chaveDivisao(chave, ha->TABLE_SIZE);
-    struct Dado* novo = (struct Dado*) malloc(sizeof(struct Dado));
+    int matricula = dado->matricula;
+    int pos = matriculaDivisao(matricula, ha->TABLE_SIZE);
+    Aluno* novo = (Aluno*) malloc(sizeof(Aluno));
     if(!novo) return 0;
     *novo = *dado;
     ha->itens[pos] = novo;
@@ -78,14 +78,14 @@ int insereHash_SemColisao(Hash* ha, struct Dado *dado){
 }
 
 // Tratando as coliões
-    // Uma colisão é a ocorrência de duas ou mais chaves na tabela Hash com o mesmo valor de posição
+    // Uma colisão é a ocorrência de duas ou mais matriculas na tabela Hash com o mesmo valor de posição
     // Área de overflow: a tabela hash é divida em área normal e área de overflow, a ultima será usada para armazenar as colisões
 
-int insereHash_AreaOverflow(Hash* ha, struct Dado* dado){
+int insereHash_AreaOverflow(Hash* ha, Aluno* dado){
     if(!ha || ha->qtd == ha->TABLE_SIZE) return 0; // não podemos inserir em uma tabela que já está com todas as posições preenchidas ou cuja alocação falhou
-    int chave = dado->chave;
-    int pos = chaveDivisao(chave, ha->TABLE_SIZE);
-    struct Dado* novo = (struct Dado*) malloc(sizeof(struct Dado));
+    int matricula = dado->matricula;
+    int pos = matriculaDivisao(matricula, ha->TABLE_SIZE);
+    Aluno* novo = (Aluno*) malloc(sizeof(Aluno));
     if(!novo) return 0;
     *novo = *dado;
     if(!ha->itens[pos]){ 
@@ -107,20 +107,20 @@ int insereHash_AreaOverflow(Hash* ha, struct Dado* dado){
 
 // Busca em tabelas Hash 
     // Sem tratar colisões
-int buscaHash_SemColisao(Hash* ha, int chave){
+int buscaHash_SemColisao(Hash* ha, int matricula){
     if(!ha) return 0;
-    int pos = chaveDivisao(chave, ha->TABLE_SIZE);
+    int pos = matriculaDivisao(matricula, ha->TABLE_SIZE);
     if(!ha->itens[pos]) return 0;
     return 1;
 }
 
-int buscaHash_AreaOverflow(Hash* ha, int chave){
+int buscaHash_AreaOverflow(Hash* ha, int matricula){
     if(!ha) return 0;
-    int pos = chaveDivisao(chave, ha->TABLE_SIZE);
+    int pos = matriculaDivisao(matricula, ha->TABLE_SIZE);
     if(ha->itens[pos]) return 1;
     else{ // (!ha->itens[pos])
         for(int i=0; i<(ha->TABLE_SIZE/3); i++){
-            if(ha->overflow[i] && ha->overflow[i]->chave == chave){
+            if(ha->overflow[i] && ha->overflow[i]->matricula == matricula){
                 return 1;
             }
         }
