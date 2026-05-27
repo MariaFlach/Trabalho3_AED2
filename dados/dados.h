@@ -3,11 +3,15 @@
 
 typedef struct Aluno {
     char nome[50];
-    int CR;
+    float CR;
     int matricula;
     char curso[30];
     char pibic;
     char orientador[30];
-}Aluno;
+} Aluno;
+
+void geraString(char* dest, int min, int max);
+void geraNome(char* dest);
+Aluno geraAlunoAleatorio();
 
 #endif
