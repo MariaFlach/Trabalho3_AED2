@@ -42,6 +42,8 @@ Aluno geraAlunoAleatorio() {
     return aluno;
 }
 
+// Durante a geração do vetor de alunos, é preciso verificar o endereço de inicio;
+// preciso revisar o conteúdo 
 Aluno* gerarVetorAlunosAleatorios(int tam){
     srand(time(NULL));
     Aluno* alunos = malloc(tam * sizeof(Aluno));
@@ -51,3 +53,15 @@ Aluno* gerarVetorAlunosAleatorios(int tam){
     }
     return alunos;
 }
+
+// Para cada elemento do vetor dos alunos, o indice contém a matricula e o endereço de inicio, será possível acessar usando o endereço de inico + sizeof(aluno)
+Indice* gerarEsquemaIndice(Aluno* alunos, int tam){
+    Indice* indices = (Indice*) malloc(tam * sizeof(Indice));
+    for (int i=0; i<tam; i++){
+        indices[i].matricula = alunos[i].matricula;
+        indices[i].endereco_inicio = i*sizeof(Aluno);
+    }
+    return indices;
+}
+
+

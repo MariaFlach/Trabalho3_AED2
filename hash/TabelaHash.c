@@ -4,23 +4,25 @@
 
 struct hash {
     int qtd, TABLE_SIZE, colisoes;
-    Aluno **itens, **overflow;
+    Indice **registros, **overflow;
 };
+
+// preciso adaptar as funções da tabela hash para colocar o indice
 
 Hash* criaHash (int TABLE_SIZE){
     Hash* ha = (Hash*) malloc(sizeof(Hash));
     if(ha){
         ha->TABLE_SIZE = TABLE_SIZE;
-        ha->itens = (Aluno**) malloc(TABLE_SIZE * sizeof(Aluno*));
-        ha->overflow = (Aluno**) malloc((TABLE_SIZE/3) * sizeof(Aluno*));
-        if(!ha->itens){
+        ha->registros = (Indice**) malloc(TABLE_SIZE * sizeof(Indice*));
+        ha->registros= (Indice**) malloc((TABLE_SIZE/3) * sizeof(Indice*));
+        if(!ha->registros){
             free(ha);
             return NULL;
         }
         ha->qtd = 0;
         ha->colisoes = 0;
         for(int i=0; i< ha->TABLE_SIZE; i++){
-            ha->itens[i] = NULL;
+            ha->registros[i] = NULL;
         }
         for(int i=0; i< (ha->TABLE_SIZE) / 3; i++){
             ha->overflow[i] = NULL;
@@ -32,14 +34,14 @@ Hash* criaHash (int TABLE_SIZE){
 void liberaHash(Hash* ha){
     if(ha){
         for(int i=0; i<(ha->TABLE_SIZE); i++){
-            if(ha->itens[i]){
-                free(ha->itens[i]);
+            if(ha->registros[i]){
+                free(ha->registros[i]);
             }
         }
         for (int j =0; j<(ha->TABLE_SIZE/3); j++){
             free(ha->overflow[j]);
         }
-        free(ha->itens);
+        free(ha->registros);
         free(ha->overflow);
         free(ha);
     }
@@ -56,15 +58,15 @@ int matriculaDivisao(int matricula, int TABLE_SIZE){
     return matricula % TABLE_SIZE;
 }
 
-int insereHash_AreaOverflow(Hash* ha, Aluno* dado){
+int insereHash_AreaOverflow(Hash* ha, Indice* dado){
     if(!ha || ha->qtd == ha->TABLE_SIZE) return 0;
     int matricula = dado->matricula;
     int pos = matriculaDivisao(matricula, ha->TABLE_SIZE);
-    Aluno* novo = (Aluno*) malloc(sizeof(Aluno));
+    Indice* novo = (Indice*) malloc(sizeof(Indice));
     if(!novo) return 0;
     *novo = *dado;
-    if(!ha->itens[pos]){
-        ha->itens[pos] = novo;
+    if(!ha->registros[pos]){
+        ha->registros[pos] = novo;
         ha->qtd++;
         return 1;
     } else {
@@ -81,16 +83,18 @@ int insereHash_AreaOverflow(Hash* ha, Aluno* dado){
     return 0;
 }
 
+
+// A função de busca deve não só retornar se o elemento foi encontrado ou não, mas também deve retornar o endereço de inicio 
 int buscaHash_AreaOverflow(Hash* ha, int matricula){
     if(!ha) return 0;
     int pos = matriculaDivisao(matricula, ha->TABLE_SIZE);
-    if(ha->itens[pos] && ha->itens[pos]->matricula == matricula) return 1;
+    if(ha->registros[pos] && ha->registros[pos]->matricula == matricula) return ha->registros[pos]->endereco_inicio;
     else{
         for(int i=0; i<(ha->TABLE_SIZE/3); i++){
             if(ha->overflow[i] && ha->overflow[i]->matricula == matricula){
-                return 1;
+                return ha->overflow[i]->endereco_inicio;
             }
         }
     }
-    return 0;
+    return -1;
 }
