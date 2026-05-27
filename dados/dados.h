@@ -13,5 +13,6 @@ typedef struct Aluno {
 void geraString(char* dest, int min, int max);
 void geraNome(char* dest);
 Aluno geraAlunoAleatorio();
+Aluno* gerarVetorAlunosAleatorios(int tam);
 
 #endif
