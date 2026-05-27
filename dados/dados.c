@@ -43,6 +43,7 @@ Aluno geraAlunoAleatorio() {
 }
 
 Aluno* gerarVetorAlunosAleatorios(int tam){
+    srand(time(NULL));
     Aluno* alunos = malloc(tam * sizeof(Aluno));
     if (!alunos) return NULL;
     for(int i=0; i<tam; i++){
