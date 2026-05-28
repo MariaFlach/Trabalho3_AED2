@@ -1,5 +1,9 @@
 # Trabalho 3 - AEDII
 
+## RODAR O PROJETO
+
+gcc main.c ABP/ABP.c dados/dados.c hash/TabelaHash.c -o programa
+
 ## Visão geral
 
 Este projeto implementa um sistema de armazenamento e busca de registros de alunos em arquivo binário, utilizando uma tabela hash com esquema de índices para acesso eficiente. A ideia central é que os dados completos dos alunos ficam gravados em disco, e a tabela hash mantém em memória apenas os índices — pares (matrícula, posição no arquivo) — para localizar qualquer registro sem precisar varrer o arquivo inteiro.
@@ -148,6 +152,8 @@ O arquivo é fechado com `fclose` ao final. A memória dos vetores de alunos e �
 
 - `main.c` — ponto de entrada do programa, orquestra todo o fluxo.
 - `dados/dados.h` — declaração dos TADs `Aluno` e `Indice` e das funções de geração de dados.
+- `ABP/ABP.h` — declaração do TAD `ABP`
+- `ABP/ABP.c` — implementação das funções do TAD de ABP
 - `dados/dados.c` — implementação das funções de geração de dados.
 - `hash/TabelaHash.h` — interface pública do módulo hash; a estrutura interna não é exposta.
 - `hash/TabelaHash.c` — implementação completa da tabela hash com área de overflow.
