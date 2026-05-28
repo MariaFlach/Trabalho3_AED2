@@ -7,6 +7,18 @@
 #define TAM 10000
 #define INICIALIZAR 100003
 #define TOTAL_BUSCAS 30
+
+int buscaSequencialPorMatricula(FILE *fp, int matricula) {
+    Aluno al;
+    fseek(fp, 0, SEEK_SET);
+    while(fread(&al, sizeof(Aluno), 1, fp) == 1) {
+        if(al.matricula == matricula) {
+
+            return ftell(fp) - sizeof(Aluno);
+        }
+    }
+    return -1;
+}
 int main(){
     
     // 
@@ -78,6 +90,38 @@ int main(){
     // Fazer busca por matricula (já mostra o retorno)
     Aluno retornado = buscaPorMatricula(indexador, alunos[10]->matricula, arquivo);
 
+    printf("--------------------------------------------QUESTÃO 3-----------------\n");
+        double tempo_total = 0.0;
+
+        for(int i = 0; i < TOTAL_BUSCAS; i++){
+
+            int matricula_procurada = alunos[i * (TAM/TOTAL_BUSCAS)] -> matricula;
+            int endereco_encontrado;
+
+            //cronometro 
+            clock_t inicio = clock();
+
+            endereco_encontrado = buscaSequencialPorMatricula(arquivo, matricula_procurada);
+            Aluno aluno_encontrado;
+            if(endereco_encontrado > -1){
+                fseek(arquivo, endereco_encontrado, SEEK_SET);
+                fread(&aluno_encontrado, sizeof(Aluno), 1, arquivo);
+            } 
+            
+            clock_t fim = clock();
+            double tempo_gasto = (double)(fim - inicio) / CLOCKS_PER_SEC;
+            tempo_total += tempo_gasto;
+
+            if(endereco_encontrado != -1) {
+                printf("Busca Sequencial [BUSCA %02d]: Mat %d -> %s | Tempo: %f s\n", i+1, matricula_procurada, aluno_encontrado.nome, tempo_gasto);
+            } else {
+                printf("Busca Sequencial [BUSCA %02d]: Mat %d -> Não encontrado | Tempo: %f s\n", i+1, matricula_procurada, tempo_gasto);
+            }
+            
+        }
+        printf("----------------------------------------");
+        printf("TEMPO MEDIO DA BUSCA POR ABP: %f segundos \n", tempo_total / TOTAL_BUSCAS);
+        printf("----------------------------------------");
 
 
 
