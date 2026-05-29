@@ -90,3 +90,18 @@ void ABP_imprime(ABP* arvore) {
     imprimeBonito(arvore->raiz->esq, "", 1);
     imprimeBonito(arvore->raiz->dir, "", 0);
 }
+
+Aluno ABP_retornaAluno(ABP* arvore, int matricula, FILE*arquivo){
+    Aluno aluno;
+    int endereco;
+
+    int achou = ABP_busca(arvore, matricula, &endereco);
+    if(achou){
+        fseek(arquivo, endereco, SEEK_SET);
+        fread(&aluno, sizeof(Aluno), 1, arquivo);
+    } else{
+        aluno.matricula = -1;
+        strncpy(aluno.nome, "NAO ENCONTRADO", sizeof(aluno.nome)-1);
+    }
+    return aluno;
+}

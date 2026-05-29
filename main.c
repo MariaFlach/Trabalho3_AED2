@@ -47,19 +47,21 @@ int main(){
        //preparando para as 30 buscas (15 existentes E 15 ALEATORIAS)
        int matriculasBuscar[TOTAL_BUSCAS];
 
+       int posicoesBuscaRecentes[TOTAL_BUSCAS/2];
+       retornarPosicaoVetor(TOTAL_BUSCAS/2, TAM, posicoesBuscaRecentes);
+
+
        //Buscando os 15 PRIMEIROS ELEMENTOS EXISTENTES
        for (int i = 0; i < 15; i++)
        {
-        matriculasBuscar[i] = alunos[i  * (TAM/15)] -> matricula;
+        matriculasBuscar[i] = alunos[posicoesBuscaRecentes[i]] -> matricula;
        }
        
        // ultimas 15 buscas: ELEMENTOS INEXISTENTES
          for (int i = 15; i < TOTAL_BUSCAS; i++)
          {
-          matriculasBuscar[i] = rand() % 1000000;
+          matriculasBuscar[i] = geraMatriculaAleatoria();
          }
-
-
 
        // executando as 30 buscas (15 EXISTENTES E 15 ALEATORIAS)
         printf("INICIANDO EXPERIMENTO DAS 30 BUSCAS NA ABP\n");
@@ -67,41 +69,26 @@ int main(){
 
         for(int i = 0; i < TOTAL_BUSCAS; i++){
             int matricula_procurada = matriculasBuscar[i];
-            int endereco_encontrado;
 
-            //cronometro 
+
             clock_t inicio = clock();
+            Aluno aluno_encontrado = ABP_retornaAluno(&arvore, matricula_procurada, arquivo);
+            clock_t fim = clock();
 
+            double tempo_gasto = (double)(fim - inicio) / CLOCKS_PER_SEC;
+            tempo_total += tempo_gasto;
 
-            // busca na abp
-            int achou = ABP_busca(&arvore, matricula_procurada, &endereco_encontrado);
-
-            if(achou){
-
-                fseek(arquivo, endereco_encontrado, SEEK_SET);
-                Aluno aluno_encontrado;
-                fread(&aluno_encontrado, sizeof(Aluno), 1, arquivo);
-
-                clock_t fim = clock();
-                double tempo_gasto = (double)(fim - inicio) / CLOCKS_PER_SEC;
-                tempo_total += tempo_gasto;
+    
+            if(aluno_encontrado.matricula != -1){
 
                 printf("ABP [BUSCA %02d]: Mat %d -> %s | Tempo: %f s\n", i+1, matricula_procurada, aluno_encontrado.nome, tempo_gasto);
-
             } else{
-
-                clock_t fim = clock();
-                double tempoGasto = (double)(fim-inicio)/ CLOCKS_PER_SEC;
-                tempo_total += tempoGasto;
-                printf("ABP [Busca %02d]: Mat %d -> NAO ENCONTRADA | Tempo: %f s\n", i + 1, matricula_procurada, tempoGasto);
-
+                printf("ABP [Busca %02d]: Mat %d -> NAO ENCONTRADA | Tempo: %f s\n", i + 1, matricula_procurada, tempo_gasto);
             }
         }
         printf("----------------------------------------");
         printf("TEMPO MEDIO DA BUSCA POR ABP: %f segundos \n", tempo_total / TOTAL_BUSCAS);
         printf("\n ----------------------------------------");
-       
-
     
     printf("--------------------------------------------QUESTÃO 2-----------------\n");
     // Inserindo os elementos no hash

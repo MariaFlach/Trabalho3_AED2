@@ -18,5 +18,7 @@ void ABP_insere(ABP* arvore, Indice idx);
 int  ABP_busca(ABP* arvore, int matricula, int* endereco_out);
 void ABP_emOrdem(NoABP* raiz);
 void ABP_imprime(ABP* arvore);
+Aluno ABP_retornaAluno(ABP* arvore, int matricula, FILE*arquivo);
+
 
 #endif
