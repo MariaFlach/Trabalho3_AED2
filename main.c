@@ -39,21 +39,34 @@ int main(){
     ABP_cria(&arvore);
 
        //inserindo os indices na ABP
-
-
        for (int i = 0; i < TAM; i++)
        {
         ABP_insere(&arvore, *indices[i]);
        }
 
-       // executando as 30 buscas e medindo o resultado
+       //preparando para as 30 buscas (15 existentes E 15 ALEATORIAS)
+       int matriculasBuscar[TOTAL_BUSCAS];
 
+       //Buscando os 15 PRIMEIROS ELEMENTOS EXISTENTES
+       for (int i = 0; i < 15; i++)
+       {
+        matriculasBuscar[i] = alunos[i  * (TAM/15)] -> matricula;
+       }
+       
+       // ultimas 15 buscas: ELEMENTOS INEXISTENTES
+         for (int i = 15; i < TOTAL_BUSCAS; i++)
+         {
+          matriculasBuscar[i] = rand() % 1000000;
+         }
+
+
+
+       // executando as 30 buscas (15 EXISTENTES E 15 ALEATORIAS)
         printf("INICIANDO EXPERIMENTO DAS 30 BUSCAS NA ABP\n");
         double tempo_total = 0.0;
 
         for(int i = 0; i < TOTAL_BUSCAS; i++){
-
-            int matricula_procurada = alunos[i * (TAM/TOTAL_BUSCAS)] -> matricula;
+            int matricula_procurada = matriculasBuscar[i];
             int endereco_encontrado;
 
             //cronometro 
@@ -75,11 +88,18 @@ int main(){
 
                 printf("ABP [BUSCA %02d]: Mat %d -> %s | Tempo: %f s\n", i+1, matricula_procurada, aluno_encontrado.nome, tempo_gasto);
 
+            } else{
+
+                clock_t fim = clock();
+                double tempoGasto = (double)(fim-inicio)/ CLOCKS_PER_SEC;
+                tempo_total += tempoGasto;
+                printf("ABP [Busca %02d]: Mat %d -> NAO ENCONTRADA | Tempo: %f s\n", i + 1, matricula_procurada, tempoGasto);
+
             }
         }
         printf("----------------------------------------");
         printf("TEMPO MEDIO DA BUSCA POR ABP: %f segundos \n", tempo_total / TOTAL_BUSCAS);
-        printf("----------------------------------------");
+        printf("\n ----------------------------------------");
        
 
     

@@ -2,11 +2,13 @@
 
 ## RODAR O PROJETO
 
-gcc main.c ABP/ABP.c dados/dados.c hash/TabelaHash.c -o programa
+```
+gcc main.c ABP/ABP.c dados/dados.c hash/TabelaHash.c lista/Lista.c -o programa
+```
 
 ## Visão geral
 
-Este projeto implementa um sistema de armazenamento e busca de registros de alunos em arquivo binário, utilizando uma tabela hash com esquema de índices para acesso eficiente. A ideia central é que os dados completos dos alunos ficam gravados em disco, e a tabela hash mantém em memória apenas os índices — pares (matrícula, posição no arquivo) — para localizar qualquer registro sem precisar varrer o arquivo inteiro.
+Este projeto implementa e compara três estratégias de busca de registros de alunos armazenados em arquivo binário: **Árvore Binária de Pesquisa (ABP)**, **Tabela Hash com encadeamento** e **busca sequencial**. Os dados completos dos alunos ficam gravados em disco; as estruturas em memória (ABP e Hash) mantêm apenas índices — pares (matrícula, posição no arquivo) — para localizar qualquer registro sem varrer o arquivo inteiro.
 
 ---
 
@@ -44,117 +46,144 @@ typedef struct Indice {
 
 Cada `Indice` funciona como um atalho para um registro no arquivo binário: armazena a matrícula do aluno e o deslocamento em bytes (byte offset) a partir do início do arquivo onde aquele registro começa. O deslocamento é calculado como `i * sizeof(Aluno)`, onde `i` é a posição do aluno no vetor gerado.
 
-O objetivo deste TAD é separar a chave de busca do dado completo. A tabela hash trabalha apenas com `Indice`s — estruturas pequenas — em vez de copiar registros inteiros de `Aluno` para a memória. Quando a busca encontra o `Indice`, usa o `endereco_inicio` para ir direto à posição correta no arquivo.
+O objetivo deste TAD é separar a chave de busca do dado completo. Tanto a ABP quanto a Hash trabalham apenas com `Indice`s — estruturas pequenas — em vez de copiar registros inteiros de `Aluno` para a memória.
+
+---
+
+## TAD Lista
+
+O TAD `Lista` é uma lista encadeada simples definida em `lista/Lista.h`, usada internamente pela tabela hash para tratar colisões por encadeamento.
+
+```c
+typedef struct NoLista {
+    Indice dado;
+    struct NoLista* proximo;
+} NoLista;
+
+typedef struct Lista {
+    NoLista* cabeca;
+    int tamanho;
+} Lista;
+```
+
+Cada nó armazena um `Indice` e um ponteiro para o próximo nó. A lista não é ordenada; inserções ocorrem sempre no início (`cabeca`).
+
+### Funções do módulo `lista`
+
+- **`criaLista`** — aloca e inicializa uma lista vazia.
+- **`liberaLista`** — percorre e libera todos os nós, depois libera a estrutura.
+- **`insereLista`** — insere um `Indice` no início da lista.
+- **`buscaLista`** — percorre a lista procurando pela matrícula e retorna o `endereco_inicio` correspondente, ou -1 se não encontrado.
+
+---
+
+## TAD ABP
+
+A Árvore Binária de Pesquisa (ABP) é definida em `ABP/ABP.h`. Cada nó armazena um `Indice` e mantém ponteiros para os filhos esquerdo e direito. A chave de ordenação é `matricula`.
+
+```c
+typedef struct NoABP {
+    Indice dado;
+    struct NoABP* esq;
+    struct NoABP* dir;
+} NoABP;
+
+typedef struct ABP {
+    NoABP* raiz;
+} ABP;
+```
+
+### Funções do módulo `ABP`
+
+- **`ABP_cria`** — inicializa a árvore com raiz `NULL`.
+- **`ABP_insere`** — insere um `Indice` na posição correta da árvore comparando matrículas. Inserção iterativa; duplicatas são ignoradas.
+- **`ABP_busca`** — percorre a árvore comparando a matrícula buscada. Retorna 1 e preenche `endereco_out` quando encontrado, 0 caso contrário. A busca é O(log n) em árvores balanceadas.
+- **`ABP_emOrdem`** — imprime todos os nós em ordem crescente de matrícula (travessia in-order recursiva).
+- **`ABP_imprime`** — imprime a árvore com formatação visual de galhos para facilitar inspeção.
 
 ---
 
 ## TAD Hash
 
-A estrutura interna `hash` é declarada em `hash/TabelaHash.c` e exposta apenas pelo tipo opaco `Hash` no header `TabelaHash.h`. Isso garante encapsulamento: o código externo não acessa os campos diretamente, apenas por meio das funções fornecidas.
+A estrutura interna `hash` é declarada em `hash/TabelaHash.c` e exposta apenas pelo tipo opaco `Hash` no header `TabelaHash.h`, garantindo encapsulamento.
 
-A estrutura possui:
+```c
+struct hash {
+    int qtd, TABLE_SIZE, colisoes;
+    Lista **registros;
+};
+```
 
-- `TABLE_SIZE`: tamanho da área principal da tabela.
-- `qtd`: quantidade total de elementos inseridos (área normal mais overflow).
+- `TABLE_SIZE`: tamanho da tabela (número de listas/buckets).
+- `qtd`: quantidade total de elementos inseridos.
 - `colisoes`: contador de colisões detectadas durante as inserções.
-- `registros`: vetor de ponteiros para `Indice` com `TABLE_SIZE` posições, que é a área principal da tabela.
-- `overflow`: vetor de ponteiros para `Indice` com `TABLE_SIZE / 3` posições, que é a área auxiliar usada quando ocorre colisão na área principal.
+- `registros`: vetor de ponteiros para `Lista`, um por posição da tabela; cada lista encadeia todos os `Indice`s que colidiram naquela posição.
 
-A função de espalhamento utilizada é o **método da divisão**: `matricula % TABLE_SIZE`. A colisão ocorre quando duas matrículas diferentes produzem o mesmo resultado nessa operação. O tratamento adotado é **área de overflow separada**: o elemento que não cabe na posição calculada vai para a primeira posição livre do vetor `overflow`. Recomenda-se usar um número primo como `TABLE_SIZE` para distribuir melhor as chaves e reduzir colisões; o projeto usa 100003.
+A função de espalhamento utilizada é uma variante do **hash de Thomas Wang** (manipulação de bits com XOR, shifts e multiplicação), que distribui as chaves de forma mais uniforme do que o simples método da divisão. O tamanho da tabela usado no projeto é **14281**.
+
+O tratamento de colisões é por **encadeamento separado**: cada posição da tabela aponta para uma lista encadeada, e todos os elementos que mapeiam para o mesmo índice são inseridos nessa lista. Não há área de overflow separada.
+
+### Funções do módulo `hash`
+
+- **`criaHash`** — aloca a estrutura, cria uma lista vazia para cada posição e inicializa os contadores.
+- **`liberaHash`** — libera todas as listas e depois a estrutura.
+- **`mostrarColisoes`** — retorna o valor do contador de colisões.
+- **`matriculaHash`** — função de espalhamento interna. Aplica a sequência de operações de bits sobre a matrícula e retorna `resultado % TABLE_SIZE`.
+- **`insereHash_Encadeamento`** — calcula a posição pela matrícula e insere o `Indice` na lista daquela posição. Incrementa o contador de colisões se a lista já continha algum elemento.
+- **`buscaHash_Encadeamento`** — calcula a posição e delega a busca para `buscaLista`, retornando o `endereco_inicio` ou -1.
+- **`retornarRegistroEmArquivo`** — posiciona o cursor no arquivo com `fseek` e lê um `Aluno` com `fread`, retornando a estrutura por valor.
+- **`buscaPorMatricula`** — função de alto nível que chama `buscaHash_Encadeamento` para obter o deslocamento e lê o registro em arquivo. Retorna um `Aluno` com campos `"Não encontrado"` se a matrícula não existir na tabela.
+- **`inserirIndicesNoHash`** — percorre o vetor de ponteiros para `Indice` e insere cada um via `insereHash_Encadeamento`. Ao final imprime e retorna a quantidade de colisões.
 
 ---
 
 ## Funções do módulo `dados`
 
-### `geraString`
-
-Gera uma string aleatória de letras minúsculas com comprimento entre `min` e `max` caracteres, inserindo o terminador nulo ao final. É usada internamente para preencher campos como curso e partes de nomes.
-
-### `geraNome`
-
-Gera um nome composto por duas palavras aleatórias, cada uma com entre 4 e 10 caracteres. A primeira letra de cada palavra é convertida para maiúscula subtraindo 32 do código ASCII. As duas palavras são concatenadas com espaço e o resultado é copiado para o destino informado.
-
-### `geraAlunoAleatorio`
-
-Cria e retorna um `Aluno` com todos os campos preenchidos aleatoriamente. O nome é gerado por `geraNome`. O CR é um float no intervalo [4,0; 10,0] com uma casa decimal. A matrícula segue o padrão `225500000 + valor_aleatorio_ate_1000000`, combinando dois números aleatórios para atingir o intervalo necessário. O curso é uma string aleatória com inicial maiúscula. O campo `pibic` é 0 ou 1 com probabilidade igual; se for 1, o orientador recebe um nome fictício precedido de "Prof. ", senão recebe "n/a".
-
-### `gerarVetorAlunosAleatorios`
-
-Recebe um tamanho `tam` e retorna um vetor de `tam` ponteiros para `Aluno`, cada um alocado individualmente no heap e preenchido com dados aleatórios via `geraAlunoAleatorio`. A semente do gerador aleatório é inicializada com o tempo atual (`srand(time(NULL))`), garantindo resultados diferentes a cada execução.
-
-### `gerarEsquemaIndice`
-
-Recebe o vetor de ponteiros para `Aluno` e seu tamanho, e retorna um vetor de ponteiros para `Indice` com a mesma quantidade de elementos. Para cada posição `i`, cria um `Indice` com a matrícula do `aluno[i]` e com o deslocamento `i * sizeof(Aluno)`, que é exatamente onde esse aluno será gravado no arquivo binário.
-
----
-
-## Funções do módulo `hash`
-
-### `criaHash`
-
-Aloca e inicializa uma nova tabela hash. Recebe o tamanho desejado para a área principal, aloca os dois vetores de ponteiros (`registros` e `overflow`), inicializa todos os ponteiros com `NULL` e os contadores com zero. Retorna o ponteiro para a estrutura criada, ou `NULL` em caso de falha na alocação.
-
-### `liberaHash`
-
-Libera toda a memória associada à tabela hash. Percorre a área principal e a área de overflow liberando cada `Indice` alocado, depois libera os próprios vetores e por fim a estrutura `Hash`. É segura para receber `NULL`.
-
-### `mostrarColisoes`
-
-Retorna o valor do campo `colisoes` da estrutura. Retorna 0 se o ponteiro for `NULL`.
-
-### `matriculaDivisao`
-
-Função de espalhamento interna. Calcula `matricula % TABLE_SIZE` e retorna o índice na área principal onde o elemento deve ser armazenado ou buscado.
-
-### `insereHash_AreaOverflow`
-
-Insere um `Indice` na tabela hash. Calcula a posição pela matrícula; se a posição na área principal estiver livre, armazena o `Indice` ali; caso contrário, incrementa o contador de colisões e procura a primeira posição livre na área de overflow. O dado é copiado internamente (nova alocação), portanto o ponteiro original pode ser liberado após a inserção. Retorna 1 em caso de sucesso e 0 em caso de falha (ponteiro nulo, tabela cheia, malloc falhou ou overflow sem espaço).
-
-### `buscaHash_AreaOverflow`
-
-Busca um `Indice` pela matrícula e retorna o `endereco_inicio` armazenado nele, ou -1 se não for encontrado. Primeiro verifica a posição calculada na área principal; se a posição estiver vazia ou ocupada por outra matrícula, percorre toda a área de overflow procurando uma entrada com a matrícula desejada.
-
-### `retornarRegistroEmArquivo`
-
-Recebe um deslocamento em bytes e um ponteiro para arquivo já aberto, posiciona o cursor com `fseek` e lê exatamente um `Aluno` com `fread`, retornando a estrutura por valor.
-
-### `buscaPorMatricula`
-
-Função de alto nível que combina a busca no hash e a leitura em arquivo. Recebe a tabela hash, uma matrícula e o arquivo aberto. Chama `buscaHash_AreaOverflow` para obter o deslocamento, depois posiciona o cursor e lê o registro correspondente, imprimindo todos os campos do aluno encontrado e retornando a estrutura.
-
-### `inserirIndicesNoHash`
-
-Percorre um vetor de ponteiros para `Indice` e insere cada elemento na tabela hash via `insereHash_AreaOverflow`. Ao final, imprime e retorna a quantidade total de colisões registradas.
+- **`geraString`** — gera uma string aleatória de letras minúsculas com comprimento entre `min` e `max` caracteres.
+- **`geraNome`** — gera um nome composto por duas palavras aleatórias com inicial maiúscula, concatenadas com espaço.
+- **`geraAlunoAleatorio`** — cria um `Aluno` com todos os campos preenchidos aleatoriamente. A matrícula segue o padrão `225500000 + valor_aleatorio_ate_1000000`.
+- **`gerarVetorAlunosAleatorios`** — retorna um vetor de `tam` ponteiros para `Aluno` alocados no heap, com semente inicializada por `srand(time(NULL))`.
+- **`gerarEsquemaIndice`** — para cada `aluno[i]`, cria um `Indice` com sua matrícula e com o deslocamento `i * sizeof(Aluno)`.
+- **`retornarPosicaoVetor`** — preenche um vetor de saída com posições aleatórias no intervalo `[0, tamVetorEntrada)`, usadas para selecionar alunos existentes nas buscas de benchmark.
+- **`geraMatriculaAleatoria`** — gera e retorna uma matrícula aleatória no mesmo intervalo usado por `geraAlunoAleatorio`, podendo ou não corresponder a um aluno existente.
 
 ---
 
 ## O que acontece na `main`
 
-A função `main` executa o fluxo completo do sistema em seis etapas:
+A `main` executa o fluxo em duas fases: preparação dos dados e experimentos de busca.
 
-**1. Geração dos dados.** É criado um vetor de 10.000 alunos aleatórios com `gerarVetorAlunosAleatorios`. Cada aluno recebe uma matrícula única gerada aleatoriamente no intervalo esperado.
+**Preparação:**
 
-**2. Geração do esquema de índices.** A função `gerarEsquemaIndice` percorre o vetor de alunos e cria para cada um um `Indice` com sua matrícula e com o deslocamento exato onde será gravado no arquivo binário. Neste ponto os dados ainda estão somente em memória.
+1. Gera um vetor de 10.000 alunos aleatórios.
+2. Gera o vetor de índices correspondente com `gerarEsquemaIndice`.
+3. Grava todos os 10.000 registros sequencialmente no arquivo `arquivoAlunos.bin`.
 
-**3. Gravação no arquivo binário.** O arquivo `arquivoAlunos.bin` é aberto em modo leitura e escrita binária. Os 10.000 registros são escritos sequencialmente com `fwrite`, um de cada vez, na mesma ordem do vetor. Após isso, o arquivo contém os dados de todos os alunos em posições fixas e previsíveis.
+**Questão 1 — Busca por ABP:**
 
-**4. Criação da tabela hash.** É instanciada uma tabela hash com 100.003 posições (número primo escolhido para minimizar colisões). O tamanho é aproximadamente 10 vezes maior do que a quantidade de registros, o que reduz drasticamente as colisões pelo método da divisão.
+Insere todos os índices na ABP. Realiza 30 buscas cronometradas: as 15 primeiras usam matrículas existentes (extraídas do vetor de alunos em posições espaçadas), e as 15 seguintes usam matrículas aleatórias que podem não existir. Para cada busca encontrada, o registro é lido do arquivo pelo endereço retornado pela ABP. Ao final, exibe o tempo médio das 30 buscas.
 
-**5. Inserção dos índices no hash.** `inserirIndicesNoHash` percorre o vetor de índices e insere cada par (matrícula, deslocamento) na tabela hash. Ao final, exibe a quantidade de colisões que ocorreram.
+**Questão 2 — Busca por Tabela Hash:**
 
-**6. Busca por matrícula.** A função `buscaPorMatricula` é chamada com a matrícula do décimo aluno do vetor (`alunos[10]->matricula`). Internamente, ela consulta o hash para obter o deslocamento no arquivo, vai direto àquela posição com `fseek` e lê o registro com `fread`, exibindo todos os dados do aluno encontrado.
+Insere todos os índices na tabela hash (tamanho 14281, encadeamento separado). Realiza 30 buscas cronometradas com a mesma divisão de 15 existentes e 15 aleatórias. Ao final, exibe o tempo médio das 30 buscas.
 
-O arquivo é fechado com `fclose` ao final. A memória dos vetores de alunos e índices não é explicitamente liberada nessa versão do código.
+**Questão 3 — Busca Sequencial:**
+
+Implementada diretamente na `main` pela função `buscaSequencialPorMatricula`, que varre o arquivo binário do início ao fim comparando matrículas. Realiza 30 buscas cronometradas usando matrículas existentes do vetor. Ao final, exibe o tempo médio.
+
+O arquivo é fechado com `fclose` ao final. A memória dos vetores não é explicitamente liberada.
 
 ---
 
 ## Estrutura de arquivos
 
-- `main.c` — ponto de entrada do programa, orquestra todo o fluxo.
-- `dados/dados.h` — declaração dos TADs `Aluno` e `Indice` e das funções de geração de dados.
-- `ABP/ABP.h` — declaração do TAD `ABP`
-- `ABP/ABP.c` — implementação das funções do TAD de ABP
+- `main.c` — ponto de entrada; orquestra geração de dados, inserção nas estruturas e os três experimentos de busca.
+- `dados/dados.h` — declaração dos TADs `Aluno` e `Indice` e das funções do módulo.
 - `dados/dados.c` — implementação das funções de geração de dados.
+- `lista/Lista.h` — declaração do TAD `Lista` encadeada.
+- `lista/Lista.c` — implementação das funções de lista encadeada.
+- `ABP/ABP.h` — declaração do TAD `ABP` e suas funções.
+- `ABP/ABP.c` — implementação da árvore binária de pesquisa.
 - `hash/TabelaHash.h` — interface pública do módulo hash; a estrutura interna não é exposta.
-- `hash/TabelaHash.c` — implementação completa da tabela hash com área de overflow.
+- `hash/TabelaHash.c` — implementação da tabela hash com encadeamento separado por listas.
 - `arquivoAlunos.bin` — arquivo binário gerado em tempo de execução com os registros dos alunos.
