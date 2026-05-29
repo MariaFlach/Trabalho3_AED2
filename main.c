@@ -5,7 +5,7 @@
 #include "ABP/ABP.h"
 #include <time.h>
 #define TAM 10000
-#define INICIALIZAR 100003
+#define INICIALIZAR 14281
 #define TOTAL_BUSCAS 30
 
 int buscaSequencialPorMatricula(FILE *fp, int matricula) {
@@ -150,7 +150,7 @@ int main(){
             
         }
         printf("----------------------------------------");
-        printf("TEMPO MEDIO DA BUSCA POR ABP: %f segundos \n", tempo_total / TOTAL_BUSCAS);
+        printf("TEMPO MEDIO DA BUSCA SEQUENCIAL: %f segundos \n", tempo_total / TOTAL_BUSCAS);
         printf("----------------------------------------");
 
 
