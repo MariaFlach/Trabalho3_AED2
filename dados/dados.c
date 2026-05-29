@@ -43,6 +43,10 @@ Aluno geraAlunoAleatorio() {
     return aluno;
 }
 
+int geraMatriculaAleatoria(){
+    return 225500000 + (int)(((long long)rand() << 15 | rand()) % 1000000);
+}
+
 // Durante a geração do vetor de alunos, é preciso verificar o endereço de inicio;
 // preciso revisar o conteúdo 
 
@@ -73,4 +77,9 @@ Indice** gerarEsquemaIndice(Aluno** alunos, int tam){
     return indices;
 }
 
-// deve receber o arquivo já aberto
+// Sortear tamVetor posições aleatorias de um vetor de entrada e gerar um vetor de saida com essas posições
+void retornarPosicaoVetor(int tamVetorSaida, int tamVetorEntrada, int vetorSaida[]){
+    for(int i=0; i<tamVetorSaida; i++){
+        vetorSaida[i] = (int) rand() % tamVetorEntrada;
+    } 
+}

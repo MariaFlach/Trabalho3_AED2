@@ -19,6 +19,7 @@ int buscaSequencialPorMatricula(FILE *fp, int matricula) {
     }
     return -1;
 }
+
 int main(){
     
     // 
@@ -85,13 +86,42 @@ int main(){
     printf("--------------------------------------------QUESTÃO 2-----------------\n");
     // Inserindo os elementos no hash
     Hash* indexador= criaHash(INICIALIZAR);
-    // inserindo os indices na tabela Hash
     inserirIndicesNoHash(indexador, TAM, indices);
-    // Fazer busca por matricula (já mostra o retorno)
-    Aluno retornado = buscaPorMatricula(indexador, alunos[10]->matricula, arquivo);
+    int posicoesBuscaExistentes[TOTAL_BUSCAS/2];
+    retornarPosicaoVetor(TOTAL_BUSCAS/2, TAM, posicoesBuscaExistentes);
+    tempo_total = 0.0;
+    double tempos[TOTAL_BUSCAS];
+
+    // Metade das buscas com posições existentes
+    for(int i =0; i<TOTAL_BUSCAS/2; i++){
+      int matricula_procurada = alunos[posicoesBuscaExistentes[i]]->matricula;
+      clock_t inicio = clock();  
+      Aluno retornado = buscaPorMatricula(indexador, matricula_procurada , arquivo);
+      clock_t fim = clock();
+      double tempo_gasto = (double)(fim - inicio) / CLOCKS_PER_SEC;
+      tempo_total += tempo_gasto;
+      tempos[i] = tempo_gasto;
+      printf("Hash (posição existente) [BUSCA %02d]: Mat %d -> %s | Tempo: %f s\n", i+1, matricula_procurada, retornado.nome, tempo_gasto);
+    }
+
+    // Outra metade das buscas usando matriculas aleatorias
+    for(int i=15; i<TOTAL_BUSCAS; i++){
+      int matricula_procurada = geraMatriculaAleatoria();
+      clock_t inicio = clock();  
+      Aluno retornado = buscaPorMatricula(indexador, matricula_procurada , arquivo);
+      clock_t fim = clock();
+      double tempo_gasto = (double)(fim - inicio) / CLOCKS_PER_SEC;
+      tempo_total += tempo_gasto;
+      tempos[i] = tempo_gasto;
+      printf("Hash (posição aleatória) [BUSCA %02d]: Mat %d -> %s | Tempo: %f s\n", i+1, matricula_procurada, retornado.nome, tempo_gasto);
+    }
+
+    printf("----------------------------------------");
+        printf("TEMPO MEDIO DA BUSCA POR Tabela Hash: %f segundos \n", tempo_total / TOTAL_BUSCAS);
+    printf("----------------------------------------");
 
     printf("--------------------------------------------QUESTÃO 3-----------------\n");
-        double tempo_total = 0.0;
+        tempo_total = 0.0;
 
         for(int i = 0; i < TOTAL_BUSCAS; i++){
 

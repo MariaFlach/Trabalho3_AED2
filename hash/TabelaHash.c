@@ -110,14 +110,26 @@ Aluno retornarRegistroEmArquivo(int endereco, FILE *arquivo){
 
 Aluno buscaPorMatricula (Hash* ha,int matricula, FILE* arquivo){
     Aluno retornado;
+    retornado.matricula = -1;
+    retornado.CR = -1.0f;
+    retornado.pibic = -1;
+    strncpy(retornado.nome, "Não encontrado", sizeof(retornado.nome) - 1);
+    retornado.nome[sizeof(retornado.nome) - 1] = '\0';
+    strncpy(retornado.curso, "Não encontrado", sizeof(retornado.curso) - 1);
+    retornado.curso[sizeof(retornado.curso) - 1] = '\0';
+    strncpy(retornado.orientador, "Não encontrado", sizeof(retornado.orientador) - 1);
+    retornado.orientador[sizeof(retornado.orientador) - 1] = '\0';
     int endereco = buscaHash_AreaOverflow(ha, matricula);
+    // se não achar nada, endereço = -1
+    if(endereco == -1){
+        return retornado;
+    }
     fseek(arquivo, endereco, SEEK_SET);
     fread(&retornado, sizeof(Aluno), 1, arquivo);
-    printf("Nome: %s \n CR: %f \n Matricula: %d \n Curso: %s \n PIBIC: %d \n Orientador: %s \n\n ", retornado.nome, retornado.CR, retornado.matricula, retornado.curso, retornado.pibic, retornado.orientador);
     return retornado;
 }
 
-int inserirIndicesNoHash(Hash* ha, int qt_indices,      Indice** indices){
+int inserirIndicesNoHash(Hash* ha, int qt_indices,  Indice** indices){
     for(int i=0; i<qt_indices; i++){
         insereHash_AreaOverflow(ha, indices[i]);
     }
