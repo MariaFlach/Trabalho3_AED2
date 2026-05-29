@@ -3,7 +3,7 @@
 ## RODAR O PROJETO
 
 ```
-gcc main.c ABP/ABP.c dados/dados.c hash/TabelaHash.c lista/Lista.c -o programa
+gcc main.c ABP/ABP.c dados/dados.c hash/TabelaHash.c lista/Lista.c -o main
 ```
 
 ## Visão geral
