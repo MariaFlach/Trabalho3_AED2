@@ -3,6 +3,28 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+static const char* primeiros[] = {
+    "Ana", "Beatriz", "Camila", "Daniela", "Eduarda",
+    "Fernanda", "Gabriela", "Helena", "Isabela", "Juliana",
+    "Larissa", "Mariana", "Natalia", "Patricia", "Rafaela",
+    "Sabrina", "Tatiana", "Vanessa", "Yasmin", "Leticia",
+    "Carlos", "Daniel", "Eduardo", "Felipe", "Gustavo",
+    "Henrique", "Igor", "João", "Lucas", "Marcos",
+    "Nicolas", "Pedro", "Rafael", "Samuel", "Thiago",
+    "Victor", "Wesley", "Alexandre", "Bruno", "Diego"
+};
+
+static const char* sobrenomes[] = {
+    "Silva", "Santos", "Oliveira", "Souza", "Rodrigues",
+    "Ferreira", "Alves", "Pereira", "Lima", "Gomes",
+    "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida",
+    "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa",
+    "Rocha", "Dias", "Nascimento", "Andrade", "Moreira",
+    "Nunes", "Marques", "Machado", "Mendes", "Freitas"
+};
+
+#define N_PRIMEIROS (sizeof(primeiros) / sizeof(primeiros[0]))
+#define N_SOBRENOMES (sizeof(sobrenomes) / sizeof(sobrenomes[0]))
 
 void geraString(char* dest, int min, int max) {
     int tam = min + rand() % (max - min + 1);
@@ -12,14 +34,12 @@ void geraString(char* dest, int min, int max) {
 }
 
 void geraNome(char* dest) {
-    char primeiro[25], segundo[25];
-    geraString(primeiro, 4, 10);
-    geraString(segundo,  4, 10);
-    primeiro[0] -= 32;
-    segundo[0]  -= 32;
-    strcpy(dest, primeiro);
+    const char* primeiro  = primeiros [rand() % N_PRIMEIROS];
+    const char* sobrenome = sobrenomes[rand() % N_SOBRENOMES];
+    dest[0] = '\0';
+    strcat(dest, primeiro);
     strcat(dest, " ");
-    strcat(dest, segundo);
+    strcat(dest, sobrenome);
 }
 
 Aluno geraAlunoAleatorio() {
