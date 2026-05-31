@@ -172,6 +172,7 @@ Insere todos os índices na tabela hash (tamanho 14281, encadeamento separado). 
 Implementada diretamente na `main` pela função `buscaSequencialPorMatricula`, que varre o arquivo binário do início ao fim comparando matrículas. Realiza 30 buscas cronometradas usando matrículas existentes do vetor. Ao final, exibe o tempo médio.
 
 **Questão 4 — Busca por intervalo na ABP:**
+
 Constrói uma ABP secundária onde a chave é o CR do aluno multiplicado por 100 (para evitar ponto flutuante). Realiza 30 buscas cronometradas do tipo > (maior que): para cada limiar, percorre a árvore em ordem usando uma pilha explícita e conta todos os registros cujo CR supera o limiar, lendo cada um do arquivo. O limiar de cada busca é o CR do aluno na posição i * (TAM / TOTAL_BUSCAS) do vetor. Ao final, exibe o tempo médio das 30 buscas.
 
 O arquivo é fechado com `fclose` ao final. A memória dos vetores não é explicitamente liberada.
