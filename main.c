@@ -20,6 +20,8 @@ int buscaSequencialPorMatricula(FILE *fp, int matricula) {
     return -1;
 }
 
+
+
 void questao1 (Aluno** alunos, FILE *arquivo, Indice** indices){
     printf("\n========================================================================================\n");
     printf("     Estrategia 1: Busca usando a árvore binária de pesquisa para o atributo chave  \n");
@@ -164,7 +166,7 @@ void questao3 (Aluno** alunos, FILE *arquivo, Indice** indices){
     printf("| %-5s | %-14s | %-14s | %-11s | %-28s |\n", "BUSCA", "STATUS", "TEMPO (s)", "MATRICULA", "NOME");
     printf("+-------+----------------+----------------+-------------+------------------------------+\n");
 
-    for(int i = 0; i < TOTAL_BUSCAS; i++){
+    for(int i = 0; i < TOTAL_BUSCAS/2; i++){
 
         int matricula_procurada = alunos[i * (TAM/TOTAL_BUSCAS)]->matricula;
         int endereco_encontrado;
@@ -183,6 +185,30 @@ void questao3 (Aluno** alunos, FILE *arquivo, Indice** indices){
         tempo_total += tempo_gasto;
 
         if(endereco_encontrado != -1){
+            printf("|  %02d   | %-14s | %.12f | %11d | %-28.28s |\n",
+                i+1, "ENCONTRADO", tempo_gasto, matricula_procurada, aluno_encontrado.nome);
+        } else {
+            printf("|  %02d   | %-14s | %.12f | %11d | %-28s |\n",
+                i+1, "NAO ENCONTRADO", tempo_gasto, matricula_procurada, "---");
+        }
+    }
+
+    for (int i = TOTAL_BUSCAS/2; i < TOTAL_BUSCAS; i++) {
+        int matricula_procurada = geraMatriculaAleatoria();
+        int endereco_encontrado;
+        Aluno aluno_encontrado;
+        clock_t inicio = clock();
+        endereco_encontrado = buscaSequencialPorMatricula(arquivo, matricula_procurada);
+        if(endereco_encontrado > -1){
+            fseek(arquivo, endereco_encontrado, SEEK_SET);
+            fread(&aluno_encontrado, sizeof(Aluno), 1, arquivo);
+        }
+        clock_t fim = clock();
+
+        tempo_gasto = (double)(fim - inicio) / CLOCKS_PER_SEC;
+        tempo_total += tempo_gasto;
+
+        if (endereco_encontrado != -1) {
             printf("|  %02d   | %-14s | %.12f | %11d | %-28.28s |\n",
                 i+1, "ENCONTRADO", tempo_gasto, matricula_procurada, aluno_encontrado.nome);
         } else {
@@ -270,6 +296,59 @@ void questao4 (Aluno** alunos, FILE *arquivo, Indice** indices){
     printf("+-------+----------------+----------------+-------------+------------------------------+\n");
 }
 
+void questao5 (Aluno** alunos, FILE *arquivo, Indice** indices){
+    printf("\n========================================================================================\n");
+    printf("       Estrategia 5: Busca do tipo > usando a busca sequencial para um atributo nao-chave\n");
+    printf("========================================================================================\n\n");
+
+    int limiares_cr[TOTAL_BUSCAS];
+    for (int i = 0; i < TOTAL_BUSCAS; i++) {
+        limiares_cr[i] = (int)(alunos[i * (TAM / TOTAL_BUSCAS)]->CR * 100);
+    }
+
+    printf("INICIANDO EXPERIMENTO DAS 30 BUSCAS SEQUENCIAIS (atributo nao-chave: CR)\n\n");
+    double tempo_total = 0.0;
+    double tempo_gasto;
+
+    printf("+-------+----------------+----------------+-------------+------------------------------+\n");
+    printf("| %-5s | %-14s | %-14s | %-11s | %-28s |\n", "BUSCA", "STATUS", "TEMPO (s)", "LIMIAR CR", "REGISTROS ENCONTRADOS");
+    printf("+-------+----------------+----------------+-------------+------------------------------+\n");
+
+    for (int i = 0; i < TOTAL_BUSCAS; i++) {
+        int limiar = limiares_cr[i];
+
+        clock_t inicio = clock();
+
+        int count = 0;
+
+        Aluno al;
+        fseek(arquivo, 0, SEEK_SET);
+        while(fread(&al, sizeof(Aluno), 1, arquivo) == 1) {
+            if((int) (al.CR * 100) > limiar) {
+                count++;
+            }
+        }
+
+        clock_t fim = clock();
+        tempo_gasto = (double)(fim - inicio) / CLOCKS_PER_SEC;
+        tempo_total += tempo_gasto;
+
+        char registros_str[29];
+        snprintf(registros_str, sizeof(registros_str), "%d registros", count);
+
+        printf("|  %02d   | %-14s | %.12f | %8.2f    | %-28s |\n",
+            i+1,
+            count > 0 ? "ENCONTRADO" : "NAO ENCONTRADO",
+            tempo_gasto,
+            limiar / 100.0,
+            registros_str);
+    }
+
+    printf("+-------+----------------+----------------+-------------+------------------------------+\n");
+    printf("| TEMPO MEDIO: %16.12f s                                                      |\n", tempo_total / TOTAL_BUSCAS);
+    printf("+-------+----------------+----------------+-------------+------------------------------+\n");
+}
+
 int main(){
     Aluno** alunos = gerarVetorAlunosAleatorios(TAM);
     FILE *arquivo; 
@@ -283,6 +362,7 @@ int main(){
     questao2(alunos, arquivo, indices);
     questao3(alunos, arquivo, indices);
     questao4(alunos, arquivo, indices);
+    questao5(alunos, arquivo, indices);
     
     fclose(arquivo);
 }
