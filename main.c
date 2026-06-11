@@ -3,6 +3,8 @@
 #include "dados/dados.h"
 #include "hash/TabelaHash.h"
 #include "ABP/ABP.h"
+#include "ABP/ABP_CR.h"
+
 #include <time.h>
 #define TAM 10000
 #define INICIALIZAR 14281
@@ -227,14 +229,17 @@ void questao4 (Aluno** alunos, FILE *arquivo, Indice** indices){
     printf("       Estrategia 4: Busca do tipo > usando a ABP para um atributo nao-chave\n");
     printf("========================================================================================\n\n");
 
-    ABP arvore_cr;
-    ABP_cria(&arvore_cr);
+
+
+    ABP_CR arvore_cr;
+    ABP_CR_cria(&arvore_cr);
 
     for (int i = 0; i < TAM; i++) {
-        Indice idx_cr;
-        idx_cr.matricula       = (int)(alunos[i]->CR * 100);
-        idx_cr.endereco_inicio = i * sizeof(Aluno);
-        ABP_insere(&arvore_cr, idx_cr);
+        ABP_CR_insere(
+            &arvore_cr,
+            (int)(alunos[i]->CR * 100),
+            i * sizeof(Aluno)
+        );
     }
 
     int limiares_cr[TOTAL_BUSCAS];
@@ -255,26 +260,11 @@ void questao4 (Aluno** alunos, FILE *arquivo, Indice** indices){
 
         clock_t inicio = clock();
 
-        int count = 0;
-        NoABP* pilha[TAM];
-        int topo = -1;
-        NoABP* atual = arvore_cr.raiz;
-
-        while (atual != NULL || topo >= 0) {
-            while (atual != NULL) {
-                pilha[++topo] = atual;
-                atual = atual->esq;
-            }
-            atual = pilha[topo--];
-
-            if (atual->dado.matricula > limiar) {
-                Aluno al;
-                fseek(arquivo, atual->dado.endereco_inicio, SEEK_SET);
-                fread(&al, sizeof(Aluno), 1, arquivo);
-                count++;
-            }
-            atual = atual->dir;
-        }
+        int count =
+        ABP_CR_contaMaiores(
+            &arvore_cr,
+            limiar
+        );
 
         clock_t fim = clock();
         tempo_gasto = (double)(fim - inicio) / CLOCKS_PER_SEC;
